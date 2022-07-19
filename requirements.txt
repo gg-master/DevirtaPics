@@ -3,7 +3,6 @@ PyQt5~=5.15.4
 PyQt5-Qt5==5.15.2
 PyQt5-sip==12.9.0
 pyqtgraph==0.12.3
-websockets==10.0
 pymorphy2>=0.9.1
 pydantic~=1.9.1
 

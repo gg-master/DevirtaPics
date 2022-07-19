@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 import threading
@@ -6,15 +7,14 @@ import time
 import cv2
 import numpy as np
 import torch
-import logging
 from PIL import Image
 
 from devirta_pics.camera.camera import Camera
+from devirta_pics.config import (DETECTOR, DETECTOR_FPS, FPS, OBJECT_COUNT,
+                                 PRINT_DETECTOR_FPS)
+from devirta_pics.utils.colors import Color
 from devirta_pics.utils.singleton import Singleton
 from devirta_pics.utils.tools import abspath
-from devirta_pics.utils.colors import Color
-from devirta_pics.config import FPS, OBJECT_COUNT, DETECTOR_FPS, \
-    PRINT_DETECTOR_FPS, DETECTOR
 
 CIRCLE_RADIUS: int = 1
 TEXT_SCALE: float = 0.5

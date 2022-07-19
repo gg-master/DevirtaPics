@@ -1,17 +1,18 @@
 import logging
 from datetime import datetime as dt
 from math import sqrt
-from typing import Dict, Tuple, List, Union
+from typing import Dict, List, Tuple, Union
 
-import pyqtgraph as pg
 import numpy as np
-from PyQt5.QtCore import QTimer, pyqtSignal, QObject
+import pyqtgraph as pg
+from PyQt5.QtCore import QObject, QTimer, pyqtSignal
 
-from devirta_pics.utils.colors import Color
-from devirta_pics.config import A_TM_DELTA, A_SMOOTH_C, G_SAVE_FD, \
-    G_MAX_CHUNKS, G_UPD_FREQ, ANALYSER_LOGS, A_DELTA_TOP, A_DELTA_BOT, \
-    G_SHOW_SMOOTH, G_SHOW_EXTREMES
+from devirta_pics.config import (A_DELTA_BOT, A_DELTA_TOP, A_SMOOTH_C,
+                                 A_TM_DELTA, ANALYSER_LOGS, G_MAX_CHUNKS,
+                                 G_SAVE_FD, G_SHOW_EXT, G_SHOW_SMOOTH,
+                                 G_UPD_FREQ)
 from devirta_pics.detector import DETECTOR
+from devirta_pics.utils.colors import Color
 from devirta_pics.utils.tools import FileManager
 
 logger = logging.getLogger(__name__)
@@ -23,6 +24,9 @@ class Analyser(QObject):
     def __init__(self, gr_view, tm_delta=A_TM_DELTA, smooth_c=A_SMOOTH_C):
         super().__init__()
         self.graph = Graph(self, gr_view)
+
+        self.show_smooth = G_SHOW_SMOOTH
+        self.show_ext = G_SHOW_EXT
 
         self.tm_delta = tm_delta
         self.smooth_c = smooth_c  # Коэффециент сглаживания кривой
@@ -47,10 +51,17 @@ class Analyser(QObject):
         self.tm_delta = self.convert_tm_delta(
             settings.get('time_delta', self.tm_delta))
         self.smooth_c = settings.get('smooth_c', self.smooth_c)
-        self.a_delta[0] = settings.get('min_delta_top', self.a_delta[0])
-        self.a_delta[1] = settings.get('max_delta_top', self.a_delta[1])
-        self.b_delta[0] = settings.get('min_delta_bot', self.b_delta[0])
-        self.b_delta[1] = settings.get('max_delta_bot', self.b_delta[1])
+        if self.smooth_c > self.tm_delta:
+            self.smooth_c = self.tm_delta
+
+        self.a_delta = [settings.get('min_delta_top', self.a_delta[0]),
+                        settings.get('max_delta_top', self.a_delta[1])]
+        self.b_delta = [settings.get('min_delta_bot', self.b_delta[0]),
+                        settings.get('max_delta_bot', self.b_delta[1])]
+        self.show_smooth = (settings.get('show_sm_a', self.show_smooth[0]),
+                            settings.get('show_sm_b', self.show_smooth[1]))
+        self.show_ext = (settings.get('show_ext_a', self.show_ext[0]),
+                         settings.get('show_ext_b', self.show_ext[1]))
 
     def convert_tm_delta(self, tm_delta):
         return tm_delta // self.graph.upd_freq
@@ -67,10 +78,9 @@ class Analyser(QObject):
 
         # Сглаживаем прямые
         a_smooth, b_smooth = self.smooth_line(a_line), self.smooth_line(b_line)
-
-        if G_SHOW_SMOOTH[0]:
+        if self.show_smooth[0]:
             self.show_line('asline', a_smooth, time)
-        if G_SHOW_SMOOTH[1]:
+        if self.show_smooth[1]:
             self.show_line('bsline', b_smooth, time)
 
         self.analyse_peaks(self.find_peaks(a_smooth),
@@ -107,10 +117,10 @@ class Analyser(QObject):
                 p1_tm not in self.detected_peaks and \
                     p2_tm not in self.detected_peaks:
 
-                if G_SHOW_EXTREMES[0]:
+                if self.show_ext[0]:
                     self.show_extremes('aext', data[:, 1], a_max_p + a_min_p,
                                        data[:, 0], upd=False)
-                if G_SHOW_EXTREMES[1]:
+                if self.show_ext[1]:
                     self.show_extremes('bext', data[:, 2], b_max_p + b_min_p,
                                        data[:, 0], upd=False)
 
@@ -125,6 +135,9 @@ class Analyser(QObject):
                 )
 
     def determine_breathing(self, a_delta, b_delta) -> str:
+        """
+        Определяет тип дыхания по переданным дельтам
+        """
         if a_delta > b_delta:
             type_br = 'chest'
             self.breath_counters['chest'] += 1
@@ -182,7 +195,7 @@ class Analyser(QObject):
             peaks_data[i, 1] = line[i]
         self.graph.set_cdata(name, peaks_data, upd=upd)
 
-    def update_logs(self, **kwargs):
+    def update_logs(self, **kwargs) -> None:
         data = {
             'times': kwargs.get('times', None),
             'deltas': kwargs.get('deltas', None),
@@ -197,7 +210,7 @@ class Analyser(QObject):
 
         self.logsUpdatedSignal.emit(data)
 
-    def stop(self):
+    def stop(self) -> None:
         self.graph.stop()
 
 

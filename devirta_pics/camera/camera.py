@@ -1,10 +1,10 @@
-import threading
 import logging
+import threading
+
 import cv2
 
-from devirta_pics.config import FPS, FRAME_WIDTH, FRAME_HEIGHT
+from devirta_pics.config import FPS, FRAME_HEIGHT, FRAME_WIDTH
 from devirta_pics.utils.singleton import Singleton
-
 
 logger = logging.getLogger(__name__)
 

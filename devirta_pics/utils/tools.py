@@ -1,7 +1,7 @@
 import json
+import logging
 import os
 import sys
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,10 @@ class FileManager:
     def load_analyser_settings(cls) -> dict:
         try:
             with open(abspath(ANALYSER_SETTINGS_PATH), encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+            with open(abspath(GRAPH_SETTINGS_PATH), encoding='utf-8') as f:
+                data.update(json.load(f))
+            return data
         except FileNotFoundError:
             logger.info('Can`t found analyser settings file.')
             return {}
@@ -39,11 +42,11 @@ class FileManager:
             return {}
 
     @classmethod
-    def save_analyser_settings(cls, data):
+    def save_analyser_settings(cls, data: dict) -> None:
         with open(abspath(ANALYSER_SETTINGS_PATH), 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False)
 
     @classmethod
-    def save_graph_settings(cls, data):
+    def save_graph_settings(cls, data: dict) -> None:
         with open(abspath(GRAPH_SETTINGS_PATH), 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False)

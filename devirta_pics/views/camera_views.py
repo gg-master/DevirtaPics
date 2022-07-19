@@ -1,8 +1,8 @@
 import time
+from threading import Thread
 
 import cv2
-from threading import Thread
-from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
+from PyQt5.QtCore import QObject, Qt, pyqtSignal
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import QLabel
 
