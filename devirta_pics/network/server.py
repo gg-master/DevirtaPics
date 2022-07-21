@@ -69,13 +69,13 @@ class NetServer(Network):
                             # Валидируем команды от клиента
                             if self.valid_comm_data(data):
                                 if data.get('type') == 'close':
-                                    self.send_data(
-                                        {'code': 200,
-                                         'msg': 'Disconnected successfully.'})
                                     break
                                 self.run_commands(data)
                     if self._closed:
                         self.send_data({'code': 521, 'msg': 'Server is Down'})
+                    else:
+                        self.send_data({'code': 200,
+                                        'msg': 'Disconnected successfully.'})
                 logger.info(f'NET: Disconnected by {addr}')
             except ConnectionResetError as e:
                 logger.error(e)

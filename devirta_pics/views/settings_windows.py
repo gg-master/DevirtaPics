@@ -7,14 +7,14 @@ from devirta_pics.camera.camera import Camera
 from devirta_pics.config import (A_DELTA_BOT, A_DELTA_TOP, A_SMOOTH_C,
                                  A_TM_DELTA, G_MAX_CHUNKS, G_SAVE_FD,
                                  G_SHOW_EXT, G_SHOW_SMOOTH, G_UPD_FREQ)
-from devirta_pics.utils.tools import FileManager
+from devirta_pics.utils.tools import FileManager, load_rsc
 from devirta_pics.views.camera_views import LoopCam
 
 
 class GraphSettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
-        uic.loadUi('./data/ui/graph_sw.ui', self)
+        uic.loadUi(load_rsc('data/ui/graph_sw.ui'), self)
         self.save_btn.clicked.connect(self.save_data)
         self.set_data(**FileManager.load_graph_settings())
 
@@ -50,7 +50,7 @@ class GraphSettingsWindow(QWidget):
 class AnalyserSettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
-        uic.loadUi('./data/ui/analyser_sw.ui', self)
+        uic.loadUi(load_rsc('data/ui/analyser_sw.ui'), self)
         self.save_btn.clicked.connect(self.save_data)
         self.set_data(**FileManager.load_analyser_settings())
 
@@ -89,7 +89,7 @@ class AnalyserSettingsWindow(QWidget):
 class CheckCamWindow(QWidget):
     def __init__(self):
         super().__init__()
-        uic.loadUi('./data/ui/camera_check.ui', self)
+        uic.loadUi(load_rsc('data/ui/camera_check.ui'), self)
         self.reconnect_cam_btn.clicked.connect(Camera().restart)
 
         self.cam = LoopCam(self, self.video_box, Camera())

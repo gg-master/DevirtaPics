@@ -1,0 +1,6 @@
+include README.md
+include requirements*.txt
+include devirta_pics/data/ui/images/*.png
+include devirta_pics/data/ui/*.ui
+include devirta_pics/data/settings/*.json
+include devirta_pics/data/neuron/*.pt

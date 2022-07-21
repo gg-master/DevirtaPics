@@ -4,10 +4,10 @@ from importlib.machinery import SourceFileLoader
 from pkg_resources import parse_requirements
 from setuptools import find_packages, setup
 
-module_name = 'DevirtaPics'
+module_name = 'devirta_pics'
 
 # Модуль может быть еще не установлен (или установлена другая версия), поэтому
-# необходимо загружать __init__.py с помощью machinery.
+# необходимо загружать __init__.py.py с помощью machinery.
 module = SourceFileLoader(
     module_name, os.path.join(module_name, '__init__.py')
 ).load_module()
@@ -32,7 +32,7 @@ setup(
     license=module.__license__,
     description=module.__doc__,
     long_description=open('README.md', encoding='utf-8').read(),
-    url='https://github.com/gg-master/SimpleMake',
+    url='https://github.com/gg-master/DevirtaPics',
     platforms='all',
     classifiers=[
         'Intended Audience :: Developers',
@@ -51,7 +51,7 @@ setup(
     # extras_require={'dev': load_requirements('requirements.dev.txt')},
     entry_points={
         'console_scripts': [
-            # '{0}-api = {0}.__main__:main'.format(module_name)
+            '{0}-app = {0}.__main__:main'.format(module_name)
         ]
     },
     include_package_data=True

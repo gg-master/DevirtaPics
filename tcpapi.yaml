@@ -1,0 +1,511 @@
+openapi: 3.0.0
+info:
+  description: |
+    Описание доступных команд для взаимодействия с приложением DevirtaPics.
+    
+    P.S. В данной документации описанны POST и GET запросы, а также конечные точки запросов из-за технической ограниченности платформы Swagger. В действительности же из-за использования TCP соединения как таковые POST и GET запросы не используются.
+  title: DevirtaPics TCP API
+  version: "0.0.1"
+servers:
+- url: localhost:port
+  description: Адрес сервера отображается в прилжении
+- url: localhost:8080
+  description: Адрес по умолчанию
+security:
+- token: []
+paths:
+  /:
+    post: 
+      summary: Отправляется при первом подключении к серверу 
+      tags:
+        - Авторизация 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+      parameters:
+      - name: type
+        description: 'Определяет тип запроса'
+        in: query
+        required: true
+        schema: 
+          type: string
+        example: 'auth'
+      - name: token
+        description: 'Аунтефикационный токен. Отображается в приложении. Состоит из 6 букв и цифр'
+        in: query
+        required: true
+        schema: 
+          type: string
+        example: '123456'
+      responses:
+        '200':
+          description: Валидация прошла успешно. Теперь Вам доступны остальные основные команды приложения. 
+        '400':
+          description: Неправильный формат данных в запросе или недопустимая команда. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "msg": "Invalid command."
+                    }
+        '404':
+          description: Не удалось найти указанный токен в приложении.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 404,
+                      "msg": "Your auth-token not found."
+                    }
+                    
+  //:
+    post:
+      summary: Запуск режима тестирования
+      description: |
+        Режим тестирования запускается с таймером по времени. В течении этого времени приложение попытается определить преобладающий тип дыхания у пациента. 
+          
+          Спустя указанное время сервер отправит ответ с данными:
+          * Если тестирование завершилось успешно, то будет код 201 с параметром data, где будет указан результат тестирования. 
+          * Если тестирование завершилось неуспешно или прервано, то будет код 204 с параметром data = null.
+          P.S. Под неуспшено подразумевается, что счетчики всех типов дыхания равны друг другу.
+      tags:
+        - Запуск тестирования
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TestModeRequest"
+      parameters:
+        - name: type
+          in: query
+          description: Тип команды.
+          required: true
+          schema:
+            type: string
+          example: 'mode'
+        - name: mode
+          in: query
+          description: Тип режима.
+          required: true
+          schema: 
+            type: string
+          example: 'test'
+        - name: time
+          in: query
+          description: Время проведения тестирования в минутах. Целое неотрицательное число.
+          required: true
+          schema: 
+            type: integer
+          example: 2
+      responses:
+        '200':
+          description: Режим успешно запущен.
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 200,
+                      "msg": "Starting test command..."
+                    }
+        '400':
+          description: Неправильный формат данных в запросе или недопустимая команда. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "msg": "Invalid command."
+                    }
+        '425':
+          description: Неудалось запустить режим. Возможно не готово само приложение или еще не завершен другой режим.
+          content:
+            application/json:
+              examples:
+                application is not ready:
+                  value: |-
+                    {
+                      "code": 425,
+                      "msg": "The application is not ready yet."
+                    }
+                failed to start:
+                  value: |- 
+                    {
+                      "code": 425,
+                      "msg": "Failed to start mode"
+                    }
+  /|:
+    get:
+      summary: Ответ сервера при завершении режима тестирования
+      tags:
+        - Результаты режима тестирования
+      responses:
+        '201': 
+          description: Ответ сервера при успешном завершении режима по истечению установленного времени.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeResultResponse'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 201,
+                      "msg": "The mode is completed.",
+                      "data": {
+                        "type_breath": "BreathType"
+                      }
+                    }
+        '204': 
+          description: | 
+            Ответ сервера при неуспешном завершении режима.
+            * По истечении установленного времени сервер отправит этот код, если не удалось определить тип преобладающего дыхания. 
+            * Сервер может отправить этот код, если режим был прерван.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeResultResponse'
+              examples:
+                unsuccessful:
+                  value: |-
+                    {
+                      "code": 204,
+                      "msg": "Mode completed unsuccessfully.",
+                      "data": null
+                    }
+                interrupted:
+                  value: |-
+                     {
+                      "code": 204,
+                      "msg": "Mode interrupted.",
+                      "data": null
+                      }
+  /\:
+    post:
+      summary: Запуск режима реабилитации
+      tags:
+        - Запуск реабилитации
+      description: |
+        Режим реабилитации будет работать до тех пор, пока его или не прервет человек, нажав кнопку завершить в окне приложения или пока клиент не отправит серверу команду "stop", которая остановит режим. 
+          
+          После остановки сервер отправит ответ с данными: 
+          * Если тестирование завершилось успешно, то будет код 200 с параметром data, где будет указан результат тестирования. 
+          * Если тестирование завершилось неуспешно, то будет код 201 с параметром data = null.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RehabModeRequest"
+      parameters:
+        - name: type
+          in: query
+          description: Тип команды.
+          required: true
+          schema:
+            type: string
+          example: 'mode'
+        - name: mode
+          in: query
+          description: Тип режима.
+          required: true
+          schema: 
+            type: string
+          example: 'rehab'
+      responses:
+        '200':
+          description: Режим успешно запущен.
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 200,
+                      "msg": "Starting rehab command..."
+                    }
+        '400':
+          description: Неправильный формат данных в запросе или недопустимая команда. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 400,
+                      "msg": "Invalid command."
+                    }
+        '425':
+          description: Неудалось запустить режим. Возможно не готово само приложение или еще не завершен другой режим.
+          content:
+            application/json:
+              examples:
+                application is not ready:
+                  value: |-
+                    {
+                      "code": 425,
+                      "msg": "The application is not ready yet."
+                    }
+                failed to start:
+                  value: |- 
+                    {
+                      "code": 425,
+                      "msg": "Failed to start mode"
+                    }
+  /_:
+    get:
+      summary: Ответ сервера при завершении режима реабилитации
+      tags:
+        - Результаты режима реабилитации
+      responses:
+        '201': 
+          description: Ответ сервера при успешном завершении режима после остановки. Параметр data содержит счетчики каждого из типов дыхания.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeResultResponse'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 201,
+                      "msg": "The mode is completed.",
+                      "data": {
+                        "stomach": 1,
+                        "chest": 2,
+                        "mix": 0
+                      }
+                    }
+        '204': 
+          description: | 
+            Ответ сервера если после остановки режима каждый из счетчиков типов дыхания равен 0.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModeResultResponse'
+              examples:
+                unsuccessful:
+                  value: |-
+                    {
+                      "code": 204,
+                      "msg": "Mode completed unsuccessfully.",
+                      "data": null
+                    }
+  /_\:
+    post:
+      summary: Принудительная остановка запущенных режимов.
+      tags:
+        - Остановка режимов
+      description: |-
+        Позволяет останавливать запущенные режимы. 
+        * При остановке режима тестирования сервер вернет сообщение о прерывании.
+        * При остановке режима реабилитации сервер вернет результаты режима.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StopModeRequest"
+      parameters:
+        - name: type
+          in: query
+          description: Тип команды.
+          required: true
+          schema:
+            type: string
+          example: 'stop'
+      responses:
+        '201':
+          description: Успешный результат режимов. См. описание кодов режмов.
+        '204': 
+          description: Неуспешный результат режимов. См. описание кодов режмов.
+        '404':
+          description: Не удалось найти запущенный режим.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 404,
+                      "msg": "Not found active mode"
+                    }
+  /*:
+    post:
+      summary: Способы закрытия соединения
+      tags:
+        - Отключение от сервера
+      description: |-
+        Закрыть соединение возможно 3 способами:
+        1. Отправить команду "close" серверу для закрытия соединения. В этом случае сервер ответит командой об успешном отсоединении.
+        2. Отправить серверу пустой набор байт (будь то пустая строка или словарь { } ). В Этом случае сервер аналогично первой ситуации ответит сообщением об успешном закрытии соединения.
+        3. При закрытии самого приложения, т.е. отключения самого сервера, сервер отправит сообщение, что сервер отключен с кодом 521.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CloseConnectionRequest"
+            examples:
+              close command:
+                value: |-
+                  {
+                    "type": "close"
+                  }
+              empty object:
+                value: {}
+      responses:
+        '200':
+          description: Успешное отключение от сервера.
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 200,
+                      "msg": "Disconnected successfully."
+                    }
+        '521':
+          description: Сервер первым закрыл соединение.
+          content:
+            application/json:
+              examples:
+                response:
+                  value: |-
+                    {
+                      "code": 521,
+                      "msg": "Server is Down"
+                    }
+components:
+  securitySchemes:
+    token: 
+      type: apiKey
+      in: query
+      name: Auth Token
+      description: Токен указывается 1 раз при подключении к серверу. Состоит из 6 букв и цифр.
+  schemas:
+    BreathType:
+      type: string
+      description: Определяет распознаваемые типы дыхания.
+      enum:
+        - stomach
+        - chest
+        - mix
+    CommandsType:
+      type: string
+      description: Определяет типы доступных команд в приложении.
+      enum:
+        - auth
+        - mode
+        - stop
+        - close
+    ModeType:
+      type: string
+      description: Определяет типы запускаемых режимов в приложении.
+      enum:
+        - test
+        - rehab
+    AuthRequest:
+      type: object
+      required:
+        - type
+        - token
+      properties:
+        type:
+          example: 'auth'
+          allOf: [$ref: '#/components/schemas/CommandsType']
+        token: 
+          type: string
+          nullable: false
+          example: '123456'
+    TestModeRequest:
+      type: object
+      required:
+        - type
+        - mode
+        - time
+      properties:
+        type: 
+          example: 'mode'
+          allOf: [$ref: '#/components/schemas/CommandsType']
+        mode:
+          example: 'test'
+          allOf: [$ref: '#/components/schemas/ModeType']
+        time:
+          example: 1
+          type: integer
+          nullable: false
+          description: Время проведения тестирования в минутах. 
+    RehabModeRequest:
+      type: object
+      required:
+       - type
+       - mode
+      properties:
+        type: 
+            example: 'mode'
+            allOf: [$ref: '#/components/schemas/CommandsType']
+        mode:
+          example: 'rehab'
+          allOf: [$ref: '#/components/schemas/ModeType']
+    StopModeRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          example: 'stop'
+          allOf: [$ref: '#/components/schemas/CommandsType']
+    ModeResultResponse:
+      type: object
+      required: 
+        - code
+        - msg
+        - data
+      properties:
+        code: 
+          type: integer
+          nullable: false
+        msg: 
+          type: string
+          nullable: false
+        data:
+          type: object
+          nullable: true
+    CloseConnectionRequest:
+      type: object
+      required:
+       - type
+      properties:
+        type:
+          example: 'close'
+          allOf: [$ref: '#/components/schemas/CommandsType']
+    Error:
+      required:
+        - code
+        - msg
+      properties:
+        code:
+          type: integer
+          nullable: false
+        msg:
+          type: string
+          nullable: false

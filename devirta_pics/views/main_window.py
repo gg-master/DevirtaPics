@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional
-
+import pkg_resources
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QMainWindow
@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QMainWindow
 from devirta_pics.camera.camera import Camera
 from devirta_pics.detector import DETECTOR
 from devirta_pics.network.qnetmanager import QNetServerManager
+from devirta_pics.utils.tools import abspath, load_rsc
 from devirta_pics.views.mode_windows import (ModeWindowBase, RehabModeOffline,
                                              RehabModeOnline,
                                              TestingModeOffline,
@@ -44,7 +45,7 @@ class MainWindow(QMainWindow):
     def load_started_w(self):
         self.menuBar().hide()
         self.statusBar().hide()
-        uic.loadUi('./data/ui/started_w.ui', self)
+        uic.loadUi(load_rsc('data/ui/started_w.ui'), self)
         self.next_btn.clicked.connect(self.load_main_w)
         self.connect_btn.clicked.connect(self.connect2server)
 
@@ -55,7 +56,7 @@ class MainWindow(QMainWindow):
 
     def load_main_w(self):
         self.mode = self.tabWidget.currentIndex()
-        uic.loadUi('./data/ui/mn_w.ui', self)
+        uic.loadUi(load_rsc('data/ui/mn_w.ui'), self)
 
         self.activate_mode()
 

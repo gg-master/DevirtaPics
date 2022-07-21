@@ -10,13 +10,14 @@ from devirta_pics.analyser import Analyser
 from devirta_pics.config import LANG
 from devirta_pics.data.settings.localization import LOCALIZATION
 from devirta_pics.detector import DETECTOR
+from devirta_pics.utils.tools import load_rsc
 from devirta_pics.views.camera_views import CallbackCam
 
 
 class ModeWindowBase(QMainWindow):
     def __init__(self, parent):
         super().__init__(parent=parent)
-        uic.loadUi('./data/ui/mode_w.ui', self)
+        uic.loadUi(load_rsc('data/ui/mode_w.ui'), self)
 
         self.detector = DETECTOR()
         self.cam = CallbackCam(self.mn_video_box, self.detector)
@@ -92,7 +93,8 @@ class TestingModeWBase(ModeWindowBase):
 
     def finish_testing(self):
         self.analyser.stop()
-        if any(self.analyser.breath_counters.values()):
+        if any(val := self.analyser.breath_counters.values()) and \
+                sum(val) != val[0]*len(val):
             tp_br = sorted(self.analyser.breath_counters.keys(),
                            key=lambda x: self.analyser.breath_counters[x])[0]
             self.parent().domin_bt_val.setText(

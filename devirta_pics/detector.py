@@ -14,7 +14,7 @@ from devirta_pics.config import (DETECTOR, DETECTOR_FPS, FPS, OBJECT_COUNT,
                                  PRINT_DETECTOR_FPS)
 from devirta_pics.utils.colors import Color
 from devirta_pics.utils.singleton import Singleton
-from devirta_pics.utils.tools import abspath
+from devirta_pics.utils.tools import abspath, load_rsc
 
 CIRCLE_RADIUS: int = 1
 TEXT_SCALE: float = 0.5
@@ -88,9 +88,9 @@ class BaseDetector:
 class NeuronDetector(BaseDetector, metaclass=Singleton):
     def __init__(self, fps=DETECTOR_FPS, obj_count=OBJECT_COUNT):
         # Загрузка сетки из корня проекта, а модели из data/neuron
-        self.model = torch.hub.load(abspath('../ultralytics_yolov5_master'),
-                                    'custom', source='local',
-                                    path=abspath('data/neuron/best.pt'))
+        self.model = torch.hub.load(load_rsc(
+            'data/neuron/ultralytics_yolov5_master'), 'custom', source='local',
+            path=load_rsc('data/neuron/best.pt'))
         super().__init__(fps, obj_count)
 
     def _run(self) -> None:
