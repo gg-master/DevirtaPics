@@ -13,6 +13,14 @@ module = SourceFileLoader(
 ).load_module()
 
 
+def package_files(directory):
+    paths = []
+    for (path, directories, filenames) in os.walk(directory):
+        for filename in filenames:
+            paths.append(os.path.join('..', path, filename))
+    return paths
+
+
 def load_requirements(fname: str) -> list:
     requirements = []
     with open(fname, 'r') as fp:
@@ -55,4 +63,5 @@ setup(
         ]
     },
     include_package_data=True
+    # package_data={'': package_files(f'{module_name}/data')},
 )

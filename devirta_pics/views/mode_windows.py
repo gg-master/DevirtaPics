@@ -7,8 +7,7 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
 
 from devirta_pics.analyser import Analyser
-from devirta_pics.config import LANG
-from devirta_pics.data.settings.localization import LOCALIZATION
+from devirta_pics.config import LANG, LOCALIZATION
 from devirta_pics.detector import DETECTOR
 from devirta_pics.utils.tools import load_rsc
 from devirta_pics.views.camera_views import CallbackCam

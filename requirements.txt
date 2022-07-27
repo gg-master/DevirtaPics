@@ -1,7 +1,7 @@
 # App ------------------------------------
-PyQt5~=5.15.4
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.9.0
+PyQt5>=5.15.4
+PyQt5-Qt>=5.15.2
+PyQt5-sip>=12.9.0
 pyqtgraph==0.12.3
 pymorphy2>=0.9.1
 pydantic~=1.9.1
@@ -20,5 +20,5 @@ tqdm>=4.41.0
 # Plotting ------------------------------------
 pandas>=1.1.4
 seaborn>=0.11.0
-setuptools~=62.6.0
+setuptools>=62.6.0
 matplotlib~=3.5.2
